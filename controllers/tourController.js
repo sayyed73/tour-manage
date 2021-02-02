@@ -1,4 +1,4 @@
-const { match } = require('assert');
+//const { match } = require('assert');
 
 const Tour = require('./../models/tourModel');
 const APIFeatures = require('./../utils/apiFeatures');
@@ -14,13 +14,17 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-// we've created a higher order function and wrapped all our async function.
+// we've created a higher order function, wrapped all our async function and catch the error.
 exports.getAllTours = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(Tour.find(), req.query)
     .filter()
     .sort()
     .limitFields()
     .paginate();
+
+  // new APIFeatures(Tour.find(), req.query) is returning an object, on that we applied
+  // filter() and then we chained sort(); but chaining won't work as filter() didn't return
+  // anything. That's why, added the returned object in return (return this) of all the methods
 
   const tours = await features.query;
 
@@ -98,6 +102,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
     },
     {
       $group: {
+        // _id: null,  // groupALL,
         _id: { $toUpper: '$difficulty' },
         numTours: { $sum: 1 },  // counting total tours, adding one for each documents
         numRatings: { $sum: '$ratingsQuantity' },

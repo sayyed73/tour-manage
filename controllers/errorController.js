@@ -19,7 +19,12 @@ const handleValidationErrorDB = err => {
     const message = `Invalid input data. ${errors.join('. ')}`;  // joining multiple error 
     // messages in case there are multiple for multiple wrong filed's value
     return new AppError(message, 400);
-  };
+};
+
+const handleJWTError = () => new AppError('Invalid token. Please log in again!', 401);
+
+const handleJWTExpiredError = () => 
+    new AppError('Your token has expired! Please log in again.', 401);
 
 const sendErrorDev = (err, res) => {
     res.status(err.statusCode).json({
@@ -62,15 +67,20 @@ module.exports = (err, req, res, next) => {
     } else if (process.env.NODE_ENV === 'production') {
         let error = { ...err };
 
-        // marking these 3 Mongoose errors as Operational Error
-        // 1) handling invalid Database Id
+        // marking these Mongoose errors as Operational Error
+        // handling invalid Database Id
         if (err.name === 'CastError') error = handleCastErrorDB(err);
 
-        // 2) handling duplicate database fields
+        // handling duplicate database fields
         if (err.code === 11000) error = handleDuplicateFieldsDB(err);
 
-        // 3) handling validation error
+        // handling validation error
         if (err.name === 'ValidationError') error = handleValidationErrorDB(err);
+
+        // wrong jwt error
+        if (error.name === 'JsonWebTokenError') error = handleJWTError();
+
+        if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
 
         sendErrorProd(error, res);
     }
