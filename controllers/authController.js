@@ -7,7 +7,6 @@ const AppError = require('./../utils/appError');
 const sendEmail = require('./../utils/email');
 
 const signToken = id => {
-    // return jwt.sign({ id: id }, process.env.JWT_SECRET, {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN
     });
@@ -16,24 +15,16 @@ const signToken = id => {
 const createSendToken = (user, statusCode, res) => {
     const token = signToken(user._id);
 
-    // res.cookie('jwt', token, {
-    //     expires: new Date(
-    //       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000   // converting 
-    //       // days to miliseconds
-    //     ),
-    //     secure = true,  // the cookie will only be sent on an encrypted connection (HTTPS).
-    //     httpOnly: true  // the cookie cannot be accessed or modified in any way by the browser
-    //                     // which is important to prevent cross-site scripting attacks.
-    // });
-
     const cookieOptions = {
         expires: new Date(
             Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
         ),
-        httpOnly: true
+        httpOnly: true  // the cookie cannot be accessed or modified in any way by the browser
+                        // which is important to prevent cross-site scripting attacks.
     };
 
     if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+    // the cookie will only be sent on an encrypted connection (HTTPS).
 
     res.cookie('jwt', token, cookieOptions);
 
@@ -65,18 +56,6 @@ exports.signup = catchAsync(async (req, res, next) => {
         role: req.body.role
     });
 
-    // const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-    //     expiresIn: process.env.JWT_EXPIRES_IN
-    // });
-    
-    // const token = signToken(newUser._id);
-    // res.status(201).json({
-    //     status: 'success',
-    //     token,
-    //     data: {
-    //         user: newUser
-    //     }
-    // });
     createSendToken(newUser, 201, res);
 });
 
@@ -89,28 +68,18 @@ exports.login = exports.login = catchAsync(async (req, res, next) => {
     }
 
     // 2) Check if user exists && password is correct
-    // const user = User.findOne({ email: email });
     // const user = User.findOne({ email });  // password is not available here since we make the field
     // hidden from output. So, we need to explicitly Select that so it will be available in the 
     // output, so that we'll be able to verify the password
 
     const user = await User.findOne({ email }).select('+password');
     // console.log(user);
-    // const correct = await user.correctPassword(password, user.password); // if user is not 
-    // available, this line will not be run
 
-    // if (!user || !correct ) {
     if (!user || !(await user.correctPassword(password, user.password))) {
         return next(new AppError('Incorrect email or password', 401));
     }
 
     // 3) If everything ok, send token to client
-    // const token = '';
-    // const token = signToken(user._id);
-    // res.status(200).json({
-    //     status: 'success',
-    //     token
-    // });
     createSendToken(user, 200, res);
 });
 
@@ -130,27 +99,8 @@ exports.protect = catchAsync(async (req, res, next) => {
 
     // 2) Verification token (if someone manipulated the data or the token has already expired etc.)
     // jwt.verify(token, process.env.JWT_SECRET);
-
-    // in jwt.verfify, we we passed the token so that the algorithm can read the payload (user._id 
-    // in our case). Now, as a third argument, this function requires an optional callback function. 
-    // So this callback is then gonna run as soon as the verification has been completed. So this 
-    // verify works like an asynchronous function. So it will verify a token, and then after that, 
-    // when it's done, it will then call the callback function that we can specify. But, we can't 
-    // write like: await jwt.verify(); as it's a synchronous function itself, therefore we need to 
-    // use promisify to make it return a promise so that it'll work like async await just like other 
+    // using promisify to make it return a promise so that it'll work like async await just like other 
     // async functions.
-
-    // The promisify() function will return a version Promise of the function. syntex of promisy()
-    // is like: promisify(jwt.verify)(token, process.env.JWT_SECRET)
-    // this is just a shorthand syntax; the second() means : call the function what is returned from 
-    // promisify() immediately; that syntax can be broken down like this with .then() clause
-    // const verify = promisify(jwt.verify);
-    // verify(token, process.env.JWT_SECRET).then().catch()
-    // or with try-catch
-    // try {
-    //    await verify(verify(token, process.env.JWT_SECRET))
-    // }catch(e){....}
-
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
     // console.log(decoded);
     // sample output: { id: '6012sg8dgids353ffsuf', iat: 1611923878, exp: 1619699878 }
@@ -167,7 +117,6 @@ exports.protect = catchAsync(async (req, res, next) => {
     }
 
     // 4) Check if user changed password after the token was issued
-    // currentUser.changedPasswordAfter(decoded.iat);
     if (currentUser.changedPasswordAfter(decoded.iat)) {
         return next(
             new AppError('User recently changed password! Please log in again.', 401)
@@ -265,12 +214,8 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     await user.save();
 
     // 3) Update changedPasswordAt property for the user  (done at userModel)
+    
     // 4) Log the user in, send JWT
-    // const token = signToken(user._id);
-    // res.status(200).json({
-    //     status: 'success',
-    //     token
-    // });
     createSendToken(user, 200, res);
 });
 
