@@ -4,3 +4,5 @@ This is an ongoing projects with Node.js, Express, MongoDB etc. So far, these mo
 - Fundamental security
 
 ![screenshot from Postman](https://i.imgur.com/tYvyVaB.png)
+
+[Overview of the API](https://documenter.getpostman.com/view/11862178/TWDUpHhV "API documentation generated from postman").

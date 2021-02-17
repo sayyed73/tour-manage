@@ -15,98 +15,6 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-// we've created a higher order function, wrapped all our async function and catch the error.
-// exports.getAllTours = catchAsync(async (req, res, next) => {
-//   const features = new APIFeatures(Tour.find(), req.query)
-//     .filter()
-//     .sort()
-//     .limitFields()
-//     .paginate();
-
-//   // new APIFeatures(Tour.find(), req.query) is returning an object, on that we applied
-//   // filter() and then we chained sort(); but chaining won't work as filter() didn't return
-//   // anything. That's why, added the returned object in return (return this) of all the methods
-
-//   const tours = await features.query;
-
-//   // SEND RESPONSE
-//   res.status(200).json({
-//     status: 'success',
-//     results: tours.length,
-//     data: {
-//       tours
-//     }
-//   });
-// });
-
-// exports.getTour = catchAsync(async (req, res, next) => {
-//   // const tour = await Tour.findById(req.params.id);  // Tour.findOne({ _id: req.params.id })
-
-//   // populating fields based on the reference in query (not in DB)
-//   // const tour = await Tour.findById(req.params.id).populate('guides'); 
-//   // const tour = await Tour.findById(req.params.id).populate({
-//   //   path: 'guides',
-//   //   select: '-__v -passwordChangedAt'
-//   // });
-//   // we need to same functionality in other routes i.e. getAllTours, updateTour. So, moving this 
-//   // to the middleware in tourModel
-
-//   const tour = await Tour.findById(req.params.id).populate('reviews');
-
-//   if (!tour) {
-//     return next(new AppError('No tour found with that ID', 404));
-//   }
-
-//   res.status(200).json({
-//     status: 'success',
-//     data: {
-//       tour
-//     }
-//   });
-// });
-
-// exports.createTour = catchAsync(async (req, res, next) => {
-//   const newTour = await Tour.create(req.body);
-  
-//   res.status(201).json({
-//       status: 'success',
-//       data: {
-//           tours: newTour
-//       }
-//   })
-// });
-
-// exports.updateTour = catchAsync(async (req, res, next) => {
-//   const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-//     new: true,
-//     runValidators: true
-//   });
-
-//   if (!tour) {
-//     return next(new AppError('No tour found with that ID', 404));
-//   }
-
-//   res.status(200).json({
-//     status: 'success',
-//     data: {
-//       tour
-//     }
-//   });
-// });
-
-// exports.deleteTour = catchAsync(async (req, res, next) => {
-//   const tour = await Tour.findByIdAndDelete(req.params.id);
-
-//   if (!tour) {
-//     return next(new AppError('No tour found with that ID', 404));
-//   }
-      
-//   res.status(204).json({
-//       status: 'success',
-//       data: null
-//   });
-// });
-
 exports.getAllTours = factory.getAll(Tour);
 exports.getTour = factory.getOne(Tour, { path: 'reviews' });
 exports.createTour = factory.createOne(Tour);
@@ -212,16 +120,12 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   // console.log(distance, lat, lng, unit);
 
   const tours = await Tour.find({
-    // this geospatial query find documents that are located within a certain distance of our 
-    // starting point (our location). We want to query for startLocation basically as startLocation 
-    // is the field that holds the geospatial point where each tour starts. To specify the value that 
-    // we  are searching for, we are using Geospatial operator, $geoWithin which finds documents
-    // within a certain geometry. We can find them in sphere. The $centerSphere operator takes an 
-    // array which contains the coordinates and the radius measured in radians unit. In order to be 
-    // do just basic queries, we need to first attribute an index to the field where the geospatial
-    // data that we're searching for is stored. So in this case, we need to add an index to
-    // startLocation (done at tourModel). More info and different operator and options can be found 
-    // at: https://docs.mongodb.com/manual/geospatial-queries
+    // This geospatial query is for startLocation as startLocation is the field that holds the 
+    // geospatial point where each tour starts. We want to find documents that are located within a 
+    // certain distance of our location. We are using Geospatial operator, $geoWithin which finds 
+    // documents within a certain geometry. The $centerSphere operator takes an array which contains
+    // the coordinates and the radius measured in radians unit. We need to add an index to
+    // startLocation (done at tourModel)
     startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
   });
 
@@ -258,7 +162,7 @@ exports.getDistances = catchAsync(async (req, res, next) => {
   // automatically use that index to perform the calculation. But if there are multiple fields with 
   // geospatial indexes, then keys parameter will be needed to be used to define the field that will
   // be used for calculations. 'near' is the point from which to calculate the distances. So, we'll
-  // pass our coordinates and spedify that property as GeoJSON point
+  // pass our coordinates and spedify that 'near' property as GeoJSON point
   const distances = await Tour.aggregate([
     {
       $geoNear: {

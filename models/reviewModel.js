@@ -1,4 +1,3 @@
-// review / rating / createdAt / ref to tour / ref to user
 const mongoose = require('mongoose');
 const Tour = require('./tourModel');
 
@@ -17,6 +16,7 @@ const reviewSchema = new mongoose.Schema(
         type: Date,
         default: Date.now
       },
+      // parent referencing
       tour: {
         type: mongoose.Schema.ObjectId,
         ref: 'Tour',
@@ -59,16 +59,6 @@ reviewSchema.pre(/^find/, function(next) {
   next();
 });
 
-// we want to store summary of a related data set on the main data set to prevent constantly queries
-// of the related data set. So, we'll store the average rating and the number of ratings on each tour,
-// so that we don't have to query the reviews and calculate that average each time that we query for
-// all tours
-
-// static method is a feature of Mongoose which we'll use here. At past, we only used instance method,
-// which we can call on documents. Rule to write function using Static method here: reviewSchema then  
-// static keyword, then function name. Our function takes tourId that's the tour to which current  
-// review belongs to. In a static method 'this' points to current model. We need to call 
-// this.aggregate on the model direcftly. That's why, we are using a static method.
 // In the aggregate method, our first step is to select all the reviews that belong to the current 
 // tour we want to update; the next stage will be calculating the statistics themselves
 // After writing this function, we'll use middleware to call the function to update the corresponding
@@ -119,28 +109,8 @@ reviewSchema.post('save', function() {
 
 // calculate review statistics when review is updated or deleted using findByIdAndUpdate and
 // findByIdAndDelete respectively. So, need to work for findOneAndUpdate & findOneAndDelete
-// reviewSchema.pre(/^findOneAnd/, async function(next) {
-//   // this refer current query not current document (as we only can use query middleware here; 
-//   // explaination before post-middleware block). But, we need current document. That's why, we can
-//   // use findOne() to retrieve the current document
-//   this.r = await this.findOne();
-//   console.log(this.r);
-//   next();
-// });
-
-// we don't have document middleware in this function as we are using post(<pattern>) instead of
-// post(save) may be. So, we can't call the calcAverageRatings function directly here. Becasue, we 
-// only can use query middleware here. And in that we don't have directly access to the current 
-// document. That's why, we retrived current document at pre-middleware above block and stored in a 
-// variable. In order to pass data from pre-middleware to post-middleware, instead of storing in a  
-// simple variable (const r = await this.findOne();), we created a property on the variable
-// reviewSchema.post(/^findOneAnd/, async function() {
-//   // await this.findOne(); does NOT work here, query has already executed
-//   await this.r.constructor.calcAverageRatings(this.r.tour);
-// });
-
-// alternate solution: Post middleware can get the document as the first argument. So the post 
-// middleware will get the updated review as an argument
+// Post middleware can get the document as the first argument. So the post middleware will get
+// the updated review as an argument
 reviewSchema.post(/^findOneAnd/, async function(doc) {
   // added check so instead of 500 system error, returning 404 error message if doc is null
   if (doc) {

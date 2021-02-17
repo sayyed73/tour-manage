@@ -27,6 +27,7 @@ exports.deleteOne = Model => catchAsync(async (req, res, next) => {
 //     data: null,
 //   });
 // });
+// we created a higher order function, wrapped all our async function and catch the error.
 
 exports.updateOne = Model =>
   catchAsync(async (req, res, next) => {

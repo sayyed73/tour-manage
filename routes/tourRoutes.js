@@ -13,16 +13,8 @@ const router = express.Router();
 // these nested routes show relationship between the parent (tours) and child (reviews) resourses. 
 // The nested route basically means to access the reviews resource on the tour's resource.
 // Similarly, we also can access reviews from a certain tour route (/tours/234dgf43)
-// router.
-//     route('/:tourId/reviews')
-//     .post(
-//         authController.protect, 
-//         authController.restrictTo('user'), 
-//         reviewController.createReview
-//     );
-// Though reviews belongs to tours, we wrote here for simplicty. But, we already have review router
-// for handling reviews. Besides that, the same block of code already exist in that file. So, 
-// whenever, we get this type of url in tour router, we'll mount/redirect that to reviewRouter
+// We already have review router for handling reviews. So, whenever, we get this type of url in tour
+// router, we'll mount/redirect that to reviewRouter
 
 router.use('/:tourId/reviews', reviewRouter);
 

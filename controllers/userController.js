@@ -12,19 +12,6 @@ const filterObj = (obj, ...allowedFields) => {
     return newObj;
 };
 
-// exports.getAllUsers = catchAsync(async (req, res, next) => {
-//     const users = await User.find();
-
-//     // SEND RESPONSE
-//     res.status(200).json({
-//         status: 'success',
-//         results: users.length,
-//         data: {
-//             users
-//         }
-//     });
-// });
-
 // GET /me needs current user id from login and doesn't require id from param (like getUser coming 
 // from getOne factory function). So, to use that function for getting current user's data, we're
 // creating this middleware to assign the id at params.
@@ -84,27 +71,6 @@ exports.createUser = (req, res) => {
         message: 'This route is not yet defined! Please use /signup instead'
     })
 }
-
-// exports.getUser = (req, res) => {
-//     res.status(500).json({
-//         status: 'error',
-//         message: 'This route is not yet defined!'
-//     })
-// }
-
-// exports.updateUser = (req, res) => {
-//     res.status(500).json({
-//         status: 'error',
-//         message: 'This route is not yet defined!'
-//     })
-// }
-
-// exports.deleteUser = (req, res) => {
-//     res.status(500).json({
-//         status: 'error',
-//         message: 'This route is not yet defined!'
-//     })
-// }
 
 exports.getUser = factory.getOne(User);
 exports.getAllUsers = factory.getAll(User);
