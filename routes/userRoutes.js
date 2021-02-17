@@ -1,6 +1,6 @@
 const express = require('express');
 // const userController = require('./../controllers/userController');
-const { getAllUsers, createUser, getUser, updateUser, deleteUser, updateMe, deleteMe } = 
+const { getAllUsers, createUser, getUser, updateUser, deleteUser, updateMe, deleteMe, getMe } = 
     require('./../controllers/userController');
 const authController = require('./../controllers/authController');
 
@@ -12,10 +12,17 @@ router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
-router.patch('/updateMyPassword', authController.protect, authController.updatePassword);
+// Protect all routes after this middleware  (middlewares work in sequence)
+router.use(authController.protect);
 
-router.patch('/updateMe', authController.protect, updateMe);
-router.delete('/deleteMe', authController.protect, deleteMe);
+// router.patch('/updateMyPassword', authController.protect, authController.updatePassword);
+router.patch('/updateMyPassword', authController.updatePassword);
+router.get('/me', getMe, getUser);
+router.patch('/updateMe', updateMe);
+router.delete('/deleteMe', deleteMe);
+
+// only admins are allowed for the actions after this middleware
+router.use(authController.restrictTo('admin'));
 
 router
     .route('/')
